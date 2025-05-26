@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizzatore Movimenti Bancari</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .file-input-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .stored-files-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .stored-files-section h3 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .month-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .month-button {
+            background: #f0f0f0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .month-button:hover {
+            background: #e0e0e0;
+        }
+
+        .month-button.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .month-button.all {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .month-button.all:hover {
+            background: #45a049;
+        }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .file-info {
+            flex-grow: 1;
+        }
+
+        .file-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .file-date {
+            color: #666;
+            font-size: 0.8rem;
+        }
+
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .summary-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .summary-card h3 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .summary-card .amount {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .income { color: #4CAF50; }
+        .expense { color: #f44336; }
+        .balance { color: #2196F3; }
+
+        .period-info {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .charts-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .chart-container h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .table-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .positive { color: #4CAF50; font-weight: bold; }
+        .negative { color: #f44336; font-weight: bold; }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden { display: none; }
+
+        .warning-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .charts-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                min-width: 300px;
+            }
+            
+            .month-selector {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Analizzatore Movimenti Bancari</h1>
+            <p>Gestisci e analizza i tuoi movimenti bancari per periodo</p>
+        </div>
+		
+        <div class="upload-section">
+            <h2>Carica Nuovo File Movimenti</h2>
+            <p>Seleziona il file .txt esportato dalla tua banca</p>
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" class="file-input" accept=".txt">
+                <div class="file-input-button">
+                    📁 Scegli File
+                </div>
+            </div>
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Elaborazione in corso...</p>
+            </div>
+        </div>
+
+        <div class="stored-files-section">
+            <h3>📁 File Salvati</h3>
+            <div id="noFiles" class="text-center" style="color: #666; padding: 20px;">
+                Nessun file salvato. Carica il primo file per iniziare.
+            </div>
+            <div id="filesContainer" class="hidden">
+                <div class="month-selector">
+                    <button class="month-button all active" onclick="showAllData()">📊 Tutti i Dati</button>
+                    <div id="monthButtons"></div>
+                </div>
+                <div class="file-list" id="fileList"></div>
+            </div>
+        </div>
+
+        <div id="results" class="hidden">
+            <div class="period-info">
+                <h3 id="periodTitle">Periodo Selezionato</h3>
+                <p id="periodDescription">Tutti i dati disponibili</p>
+            </div>
+
+            <div class="summary-section">
+                <div class="summary-card">
+                    <h3>Entrate Totali</h3>
+                    <div class="amount income" id="totalIncome">€0,00</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Uscite Totali</h3>
+                    <div class="amount expense" id="totalExpenses">€0,00</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Saldo Netto</h3>
+                    <div class="amount balance" id="netBalance">€0,00</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Transazioni</h3>
+                    <div class="amount" id="totalTransactions">0</div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-container">
+                    <h3>📊 Distribuzione Spese per Categoria</h3>
+                    <canvas id="expensesPieChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>📈 Entrate vs Uscite</h3>
+                    <canvas id="incomeExpensesChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>📉 Trend Mensile</h3>
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>💳 Metodi di Pagamento</h3>
+                    <canvas id="paymentMethodsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h3>📋 Riepilogo per Categoria</h3>
+                <table id="categoryTable">
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Numero Transazioni</th>
+                            <th>Importo Totale</th>
+                            <th>% sul Totale</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-section">
+                <h3>📄 Ultime 50 Transazioni</h3>
+                <table id="transactionsTable">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Descrizione</th>
+                            <th>Categoria</th>
+                            <th>Importo</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // Storage temporaneo per la demo (in produzione useresti localStorage)
+    let storedFiles = new Map();
+    let allTransactions = [];
+    let currentPeriod = 'all';
+    let charts = {};
+
+    // Inizializzazione al caricamento della pagina
+    document.addEventListener('DOMContentLoaded', function() {
+        loadStoredFiles();
+        updateFilesList();
+        if (storedFiles.size > 0) {
+            showAllData();
+        }
+    });
+
+    // Simula il caricamento dei file salvati (in produzione useresti localStorage)
+    function loadStoredFiles() {
+        // In un ambiente reale, qui caricheresti da localStorage
+        const saved = localStorage.getItem('bankFiles');
+        if (saved) {
+             storedFiles = new Map(JSON.parse(saved));
+        }
+        
+        // Per la demo, manteniamo i file in memoria durante la sessione
+        console.log('Files loaded from memory storage');
+    }
+
+    // Salva un file (in produzione useresti localStorage)
+    function saveFile(filename, content, transactions) {
+        const fileData = {
+            filename: filename,
+            content: content,
+            transactions: transactions,
+            uploadDate: new Date().toISOString(),
+            period: extractPeriodFromTransactions(transactions)
+        };
+        
+        storedFiles.set(filename, fileData);
+        
+        // In un ambiente reale, qui salveresti in localStorage
+        localStorage.setItem('bankFiles', JSON.stringify(Array.from(storedFiles.entries())));
+        
+        console.log('File saved to memory storage:', filename);
+    }
+
+    // Estrae il periodo dalle transazioni
+    function extractPeriodFromTransactions(transactions) {
+        if (transactions.length === 0) return [];
+        
+        const periods = new Set();
+        transactions.forEach(t => {
+            const date = t.date; // formato DD/MM/YYYY
+            const monthYear = date.substring(3); // MM/YYYY
+            periods.add(monthYear);
+        });
+        
+        return Array.from(periods).sort();
+    }
+
+    // Elimina un file
+    function deleteFile(filename) {
+        if (confirm(`Sei sicuro di voler eliminare il file "${filename}"?`)) {
+            storedFiles.delete(filename);
+            localStorage.setItem('bankFiles', JSON.stringify(Array.from(storedFiles.entries())));
+            updateFilesList();
+            
+            if (storedFiles.size === 0) {
+                document.getElementById('results').classList.add('hidden');
+            } else {
+                showAllData();
+            }
+        }
+    }
+
+    // Aggiorna la lista dei file
+    function updateFilesList() {
+        const noFiles = document.getElementById('noFiles');
+        const filesContainer = document.getElementById('filesContainer');
+        const fileList = document.getElementById('fileList');
+        
+        if (storedFiles.size === 0) {
+            noFiles.classList.remove('hidden');
+            filesContainer.classList.add('hidden');
+            return;
+        }
+        
+        noFiles.classList.add('hidden');
+        filesContainer.classList.remove('hidden');
+        
+        fileList.innerHTML = '';
+        
+        storedFiles.forEach((fileData, filename) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <div class="file-name">${filename}</div>
+                    <div class="file-date">Caricato: ${new Date(fileData.uploadDate).toLocaleDateString('it-IT')}</div>
+                    <div class="file-date">Periodi: ${fileData.period.join(', ')}</div>
+                    <div class="file-date">Transazioni: ${fileData.transactions.length}</div>
+                </div>
+                <button class="delete-btn" onclick="deleteFile('${filename}')">🗑️</button>
+            `;
+            fileList.appendChild(fileItem);
+        });
+        
+        updateMonthButtons();
+    }
+
+    // Aggiorna i bottoni dei mesi
+    function updateMonthButtons() {
+        const monthButtons = document.getElementById('monthButtons');
+        monthButtons.innerHTML = '';
+        
+        const allPeriods = new Set();
+        storedFiles.forEach(fileData => {
+            fileData.period.forEach(period => allPeriods.add(period));
+        });
+        
+        const sortedPeriods = Array.from(allPeriods).sort();
+        
+        sortedPeriods.forEach(period => {
+            const button = document.createElement('button');
+            button.className = 'month-button';
+            button.textContent = period;
+            button.onclick = () => showPeriodData(period);
+            monthButtons.appendChild(button);
+        });
+    }
+
+    // Mostra tutti i dati
+    function showAllData() {
+        currentPeriod = 'all';
+        updateActiveButton();
+        
+        // Combina tutte le transazioni
+        allTransactions = [];
+        storedFiles.forEach(fileData => {
+            allTransactions = allTransactions.concat(fileData.transactions);
+        });
+        
+        // Ordina per data
+        allTransactions.sort((a, b) => new Date(b.date.split('/').reverse().join('-')) - new Date(a.date.split('/').reverse().join('-')));
+        
+        document.getElementById('periodTitle').textContent = '📊 Tutti i Dati';
+        document.getElementById('periodDescription').textContent = `${allTransactions.length} transazioni da ${storedFiles.size} file(s)`;
+        
+        if (allTransactions.length > 0) {
+            updateAnalysis(allTransactions);
+            document.getElementById('results').classList.remove('hidden');
+        }
+    }
+
+    // Mostra dati per un periodo specifico
+    function showPeriodData(period) {
+        currentPeriod = period;
+        updateActiveButton();
+        
+        // Filtra transazioni per il periodo
+        const periodTransactions = [];
+        storedFiles.forEach(fileData => {
+            const filtered = fileData.transactions.filter(t => t.date.substring(3) === period);
+            periodTransactions.push(...filtered);
+        });
+        
+        periodTransactions.sort((a, b) => new Date(b.date.split('/').reverse().join('-')) - new Date(a.date.split('/').reverse().join('-')));
+        
+        document.getElementById('periodTitle').textContent = `📅 ${period}`;
+        document.getElementById('periodDescription').textContent = `${periodTransactions.length} transazioni nel periodo selezionato`;
+        
+        if (periodTransactions.length > 0) {
+            updateAnalysis(periodTransactions);
+            document.getElementById('results').classList.remove('hidden');
+        }
+    }
+
+    // Aggiorna il bottone attivo
+    function updateActiveButton() {
+        document.querySelectorAll('.month-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        if (currentPeriod === 'all') {
+            document.querySelector('.month-button.all').classList.add('active');
+        } else {
+            const targetBtn = Array.from(document.querySelectorAll('.month-button')).find(btn => 
+                btn.textContent === currentPeriod && !btn.classList.contains('all')
+            );
+            if (targetBtn) targetBtn.classList.add('active');
+        }
+    }
+
+    // Funzione per categorizzare le transazioni
+    function categorizeTransaction(description) {
+        const desc = description.toLowerCase();
+        
+        if (desc.includes('caffe') || desc.includes('pizza') || desc.includes('supermercati') || 
+            desc.includes('minimarket') || desc.includes('tortellin') || desc.includes('pasticceria')) {
+            return 'Alimentari';
+        }
+        if (desc.includes('farmacia')) {
+            return 'Salute';
+        }
+        if (desc.includes('bonifico') && desc.includes('affitto')) {
+            return 'Affitto';
+        }
+        if (desc.includes('emolumenti') || desc.includes('cedole') || desc.includes('dividendi')) {
+            return 'Stipendio/Investimenti';
+        }
+        if (desc.includes('pos') || desc.includes('carta')) {
+            return 'Acquisti Vari';
+        }
+        if (desc.includes('prelievo')) {
+            return 'Prelievi';
+        }
+        if (desc.includes('euronics') || desc.includes('leroy') || desc.includes('prenatal') || desc.includes('gabrielli')) {
+            return 'Shopping';
+        }
+        if (desc.includes('tabaccheria')) {
+            return 'Tabacchi';
+        }
+        if (desc.includes('park')) {
+            return 'Parcheggi';
+        }
+        if (desc.includes('bonifico')) {
+            return 'Bonifici';
+        }
+        if (desc.includes('findomestic') || desc.includes('sepa')) {
+            return 'Finanziamenti';
+        }
+        
+        return 'Altro';
+    }
+
+    // Funzione per parsare il file
+    function parseTransactionFile(content) {
+        const lines = content.split('\n');
+        const parsedTransactions = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            // Cerca le linee che iniziano con un numero (le transazioni)
+            const match = line.match(/^(\d+)\s+(\d{2}\/\d{2}\/\d{4})\s+(.*?)\s+([\+\-]\d+[,\.]\d{2})$/);
+            if (match) {
+                const [, id, date, description, amount] = match;
+                const numAmount = parseFloat(amount.replace(',', '.'));
+                
+                parsedTransactions.push({
+                    id: parseInt(id),
+                    date: date,
+                    description: description.trim(),
+                    amount: numAmount,
+                    category: categorizeTransaction(description)
+                });
+            } else {
+                // Cerca pattern alternativi per le transazioni non contabilizzate
+                const altMatch = line.match(/(\d{2}\/\d{2}\/\d{4})\s+Non contabilizzato.*?(\-\d+[,\.]\d{2})$/);
+                if (altMatch) {
+                    const [, date, amount] = altMatch;
+                    const numAmount = parseFloat(amount.replace(',', '.'));
+                    
+                    // Estrai la descrizione dalla linea
+                    const descMatch = line.match(/PAGAMENTO CARTA.*?PRESSO\s+(.*?)\s+\\/);
+                    const description = descMatch ? descMatch[1] : 'Pagamento carta';
+                    
+                    parsedTransactions.push({
+                        id: parsedTransactions.length + 1,
+                        date: date,
+                        description: description.trim(),
+                        amount: numAmount,
+                        category: categorizeTransaction(description)
+                    });
+                }
+            }
+        }
+        
+        return parsedTransactions.sort((a, b) => new Date(b.date.split('/').reverse().join('-')) - new Date(a.date.split('/').reverse().join('-')));
+    }
+
+    // Aggiorna l'analisi con le transazioni fornite
+    function updateAnalysis(transactions) {
+        updateSummary(transactions);
+        createCharts(transactions);
+        populateTables(transactions);
+    }
+
+    // Funzione per calcolare le statistiche
+    function calculateStats(transactions) {
+        const income = transactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0);
+        const expenses = Math.abs(transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0));
+        const balance = income - expenses;
+        
+        return { income, expenses, balance, total: transactions.length };
+    }
+
+    // Funzione per raggruppare per categoria
+    function groupByCategory(transactions) {
+        const categories = {};
+        const totalExpenses = Math.abs(transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + t.amount, 0));
+        
+        transactions.forEach(t => {
+            if (!categories[t.category]) {
+                categories[t.category] = { count: 0, amount: 0 };
+            }
+            categories[t.category].count++;
+            categories[t.category].amount += Math.abs(t.amount);
+        });
+        
+        // Calcola percentuali
+        Object.keys(categories).forEach(cat => {
+            categories[cat].percentage = totalExpenses > 0 ? (categories[cat].amount / totalExpenses * 100).toFixed(1) : 0;
+        });
+        
+        return categories;
+    }
+
+    // Funzione per formattare valuta
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('it-IT', {
+            style: 'currency',
+            currency: 'EUR'
+        }).format(amount);
+    }
+
+    // Funzione per creare i grafici
+    function createCharts(transactions) {
+        const expenses = transactions.filter(t => t.amount < 0);
+        const categories = groupByCategory(expenses);
+        
+        // Distruggi grafici esistenti
+        Object.values(charts).forEach(chart => {
+            if (chart) chart.destroy();
+        });
+        
+        // Grafico a torta delle spese
+        const ctx1 = document.getElementById('expensesPieChart').getContext('2d');
+        charts.pie = new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(categories),
+                datasets: [{
+                    data: Object.values(categories).map(c => c.amount),
+                    backgroundColor: [
+                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+                        '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + formatCurrency(context.parsed);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Grafico entrate vs uscite
+        const stats = calculateStats(transactions);
+        const ctx2 = document.getElementById('incomeExpensesChart').getContext('2d');
+        charts.bar = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['Entrate', 'Uscite'],
+                datasets: [{
+                    data: [stats.income, stats.expenses],
+                    backgroundColor: ['#4CAF50', '#f44336']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return formatCurrency(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Grafico trend mensile
+        const monthlyData = {};
+        transactions.forEach(t => {
+            const month = t.date.substring(3); // MM/YYYY
+            if (!monthlyData[month]) {
+                monthlyData[month] = { income: 0, expenses: 0 };
+            }
+            if (t.amount > 0) {
+                monthlyData[month].income += t.amount;
+            } else {
+                monthlyData[month].expenses += Math.abs(t.amount);
+            }
+        });
+
+        const months = Object.keys(monthlyData).sort();
+        const ctx3 = document.getElementById('monthlyTrendChart').getContext('2d');
+        charts.line = new Chart(ctx3, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Entrate',
+                    data: months.map(m => monthlyData[m].income),
+                    borderColor: '#4CAF50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    fill: true
+                }, {
+                    label: 'Uscite',
+                    data: months.map(m => monthlyData[m].expenses),
+                    borderColor: '#f44336',
+                    backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Grafico metodi di pagamento
+        const paymentMethods = {};
+        transactions.forEach(t => {
+            let method = 'Altro';
+            const desc = t.description.toLowerCase();
+            
+            if (desc.includes('pos') || desc.includes('carta')) {
+                method = 'Carta';
+            } else if (desc.includes('prelievo')) {
+                method = 'Prelievo';
+            } else if (desc.includes('bonifico')) {
+                method = 'Bonifico';
+            } else if (desc.includes('emolumenti') || desc.includes('cedole')) {
+                method = 'Accredito';
+            }
+            
+            if (!paymentMethods[method]) {
+                paymentMethods[method] = 0;
+            }
+            paymentMethods[method] += Math.abs(t.amount);
+        });
+
+        const ctx4 = document.getElementById('paymentMethodsChart').getContext('2d');
+        charts.payment = new Chart(ctx4, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(paymentMethods),
+                datasets: [{
+                    data: Object.values(paymentMethods),
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return formatCurrency(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Funzione per aggiornare il riepilogo
+    function updateSummary(transactions) {
+        const stats = calculateStats(transactions);
+        
+        document.getElementById('totalIncome').textContent = formatCurrency(stats.income);
+        document.getElementById('totalExpenses').textContent = formatCurrency(stats.expenses);
+        document.getElementById('netBalance').textContent = formatCurrency(stats.balance);
+        document.getElementById('totalTransactions').textContent = stats.total;
+        
+        // Colora il saldo
+        const balanceElement = document.getElementById('netBalance');
+        balanceElement.className = 'amount ' + (stats.balance >= 0 ? 'income' : 'expense');
+    }
+
+    // Funzione per popolare le tabelle
+    function populateTables(transactions) {
+        // Tabella categorie
+        const categories = groupByCategory(transactions);
+        const categoryTableBody = document.querySelector('#categoryTable tbody');
+        categoryTableBody.innerHTML = '';
+        
+        // Ordina categorie per importo
+        const sortedCategories = Object.entries(categories).sort((a, b) => b[1].amount - a[1].amount);
+        
+        sortedCategories.forEach(([category, data]) => {
+            const row = categoryTableBody.insertRow();
+            row.innerHTML = `
+                <td>${category}</td>
+                <td>${data.count}</td>
+                <td class="${data.amount > 0 ? 'positive' : 'negative'}">${formatCurrency(data.amount)}</td>
+                <td>${data.percentage}%</td>
+            `;
+        });
+        
+        // Tabella transazioni
+        const transactionsTableBody = document.querySelector('#transactionsTable tbody');
+        transactionsTableBody.innerHTML = '';
+        
+        // Mostra le ultime 50 transazioni
+        const recentTransactions = transactions.slice(0, 50);
+        
+        recentTransactions.forEach(transaction => {
+            const row = transactionsTableBody.insertRow();
+            row.innerHTML = `
+                <td>${transaction.date}</td>
+                <td>${transaction.description}</td>
+                <td>${transaction.category}</td>
+                <td class="${transaction.amount >= 0 ? 'positive' : 'negative'}">${formatCurrency(transaction.amount)}</td>
+            `;
+        });
+    }
+
+    // Gestione caricamento file
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        document.getElementById('loading').style.display = 'block';
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const content = e.target.result;
+                const transactions = parseTransactionFile(content);
+                
+                if (transactions.length === 0) {
+                    alert('Nessuna transazione trovata nel file. Verifica il formato del file.');
+                    return;
+                }
+                
+                // Salva il file (sostituisce se esiste già)
+                saveFile(file.name, content, transactions);
+                
+                // Aggiorna l'interfaccia
+                updateFilesList();
+                showAllData();
+                
+                alert(`File caricato con successo! Trovate ${transactions.length} transazioni.`);
+                
+            } catch (error) {
+                alert('Errore nel processare il file: ' + error.message);
+                console.error('Errore parsing:', error);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                // Reset input file
+                e.target.value = '';
+            }
+        };
+        
+        reader.readAsText(file);
+    });
+    </script>
+</body>
+</html>
