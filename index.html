@@ -739,12 +739,12 @@
                 categories[t.category] = { count: 0, amount: 0 };
             }
             categories[t.category].count++;
-            categories[t.category].amount += Math.abs(t.amount);
+            categories[t.category].amount += t.amount; // Rimuovo Math.abs() per mantenere il segno originale
         });
         
-        // Calcola percentuali
+        // Calcola percentuali basate sul valore assoluto
         Object.keys(categories).forEach(cat => {
-            categories[cat].percentage = totalExpenses > 0 ? (categories[cat].amount / totalExpenses * 100).toFixed(1) : 0;
+            categories[cat].percentage = totalExpenses > 0 ? (Math.abs(categories[cat].amount) / totalExpenses * 100).toFixed(1) : 0;
         });
         
         return categories;
