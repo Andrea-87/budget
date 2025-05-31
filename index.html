@@ -336,6 +336,22 @@
                     📁 Scegli File
                 </div>
             </div>
+			
+			<div>
+			    <input id="recordId" type="text" placeholder="Chaive ID" />
+				
+				<h2>📥 Carica i dati aggiornati</h2>
+				<div class="file-input-button" onclick="loadJson()">
+                    📥 Carica
+                </div>
+				<pre id="output">Clicca su "Carica" per vedere i dati salvati</pre>
+				
+				<h2>📤 Salva i dati sul DB</h2>
+				 <div class="file-input-button" onclick="saveJson()">
+                    📤 Invia
+                </div>
+			</div>
+  
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p>Elaborazione in corso...</p>
@@ -432,7 +448,7 @@
         </div>
     </div>
 
-    <script>
+    <script type="text/javascript">
     // Storage temporaneo per la demo (in produzione useresti localStorage)
     let storedFiles = new Map();
     let allTransactions = [];
@@ -1042,6 +1058,87 @@
         
         reader.readAsText(file);
     });
+	
+	
+	/**
+	**	Supabase
+	**/
+	const SUPABASE_URL = 'https://vuleuwrwcprvvreotnmt.supabase.co';
+    const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1bGV1d3J3Y3BydnZyZW90bm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2OTkyOTEsImV4cCI6MjA2NDI3NTI5MX0.-YrLiQHS_39mN_WXett2Ao_0hSghQ5szlZ9H648PW0U';
+    const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1bGV1d3J3Y3BydnZyZW90bm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2OTkyOTEsImV4cCI6MjA2NDI3NTI5MX0.-YrLiQHS_39mN_WXett2Ao_0hSghQ5szlZ9H648PW0U';
+
+    async function saveJson() {
+	  let recordId = document.getElementById('recordId').value;
+	  if(recordId == null || recordId === '') return alert('Il campo Chiave Id è obbligatoria');
+	   
+      //let rawInput = document.getElementById('jsonInput').value;
+	  
+	  const rawInput = localStorage.getItem('bankFiles');
+
+      let parsedJson;
+	  
+	 
+	  
+      try {
+        parsedJson = JSON.parse(rawInput);
+      } catch (err) {
+        alert("JSON non valido!");
+        return;
+      }
+
+      const url = `${SUPABASE_URL}/rest/v1/data_store`;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'apikey': SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+          id: recordId,
+          data: parsedJson
+        })
+      });
+
+      const result = await res;
+	  alert("Salvato con successo:\n" + res.ok);
+    }
+
+    async function loadJson() {
+	  let recordId = document.getElementById('recordId').value;
+	  if(recordId == null || recordId === '') return alert('Il campo Chiave Id è obbligatoria');
+	  
+      const url = `${SUPABASE_URL}/rest/v1/data_store?id=eq.${recordId}`;
+
+      const res = await fetch(url, {
+        headers: {
+          'apikey': ANON_KEY,
+          'Authorization': `Bearer ${ANON_KEY}`
+        }
+      });
+
+      const result = await res.json();
+      const data = result[0]?.data;
+
+      // document.getElementById('output').textContent = data
+        // ? JSON.stringify(data, null, 2)
+        // : "Nessun dato trovato!";
+	
+	 let value = data ? JSON.stringify(data, null, 2) : "";
+	 
+	 localStorage.removeItem('bankFiles');
+	 localStorage.setItem('bankFiles', value);
+	 //localStorage.setItem('bankFiles', JSON.stringify(Array.from(storedFiles.entries())));
+	 
+	 loadStoredFiles();
+     updateFilesList();
+     if (storedFiles.size > 0) {
+        showAllData();
+     }
+	 
+    }
     </script>
 </body>
-</html>
+</html>	
