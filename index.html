@@ -15,30 +15,47 @@
         </div>
 		
         <div class="upload-section">
-            <h2>Carica Nuovo File Movimenti</h2>
-            <p>Seleziona il file .txt esportato dalla tua banca</p>
-            <div class="file-input-wrapper">
-                <input type="file" id="fileInput" class="file-input" accept=".txt">
-                <div class="file-input-button">
-                    📁 Scegli File
+            <!-- Sezione Upload File -->
+            <div class="file-upload-area">
+                <h2>📁 Carica Nuovo File Movimenti</h2>
+                <p>Seleziona il file .txt esportato dalla tua banca</p>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" class="file-input" accept=".txt">
+                    <div class="file-input-button">
+                        📁 Scegli File
+                    </div>
                 </div>
             </div>
-			
-			<div>
-			    <input id="recordId" type="text" placeholder="Chaive ID" />
-				
-				<h2>📥 Carica i dati aggiornati</h2>
-				<div class="file-input-button" onclick="loadJson()">
-                    📥 Carica
+
+            <!-- Sezione Database -->
+            <div class="database-section">
+                <h3>🗄️ Gestione Database</h3>
+                
+                <div class="key-input-group">
+                    <label for="recordId">🔑 Chiave Identificativa</label>
+                    <input 
+                        id="recordId" 
+                        type="text" 
+                        class="key-input"
+                        placeholder="Inserisci la tua chiave ID univoca" 
+                        required
+                    />
                 </div>
-				<pre id="output">Clicca su "Carica" per vedere i dati salvati</pre>
-				
-				<h2>📤 Salva i dati sul DB</h2>
-				 <div class="file-input-button" onclick="saveJson()">
-                    📤 Invia
+
+                <div class="action-buttons">
+                    <button class="action-btn load-btn" onclick="loadJson()" id="loadBtn">
+                        <span>📥</span>
+                        <span>Carica Dati</span>
+                    </button>
+                    <button class="action-btn save-btn" onclick="saveJson()" id="saveBtn">
+                        <span>📤</span>
+                        <span>Salva Dati</span>
+                    </button>
                 </div>
-			</div>
-  
+
+                <div class="status-message" id="statusMessage"></div>
+            </div>
+
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p>Elaborazione in corso...</p>
