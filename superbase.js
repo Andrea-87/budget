@@ -51,8 +51,9 @@ async function loadJson() {
 
 		const result = await res.json();
 		const data = result[0]?.data;
-
-		let value = data ? JSON.stringify(data, null, 2) : "";
+		const dataDecodificato = decodifica(data, recordId);
+		
+		let value = data ? JSON.stringify(dataDecodificato, null, 2) : "";
 
 		localStorage.removeItem('bankFiles');
 		localStorage.setItem('bankFiles', value);
@@ -84,7 +85,8 @@ async function saveJson() {
 	try {
 		// Chiamata API
 		const rawInput = localStorage.getItem('bankFiles');
-		let parsedJson = JSON.parse(rawInput);
+		const bankFilesCodificato = codifica(bankFiles, recordId);
+		let parsedJson = JSON.parse(bankFilesCodificato);
 
 		const url = `${SUPABASE_URL}/rest/v1/data_store`;
 
