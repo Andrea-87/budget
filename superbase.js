@@ -86,7 +86,7 @@ async function saveJson() {
 		// Chiamata API
 		const rawInput = localStorage.getItem('bankFiles');
 		const bankFilesCodificato = codifica(rawInput, recordId);
-		let parsedJson = JSON.parse(bankFilesCodificato);
+		let parsedJson = bankFilesCodificato;  //JSON.parse(bankFilesCodificato);
 
 		const url = `${SUPABASE_URL}/rest/v1/data_store`;
 
