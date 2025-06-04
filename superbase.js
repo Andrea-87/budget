@@ -53,10 +53,11 @@ async function loadJson() {
 		const data = result[0]?.data;
 		const dataDecodificato = decodifica(data, recordId);
 		
-		let value = data ? JSON.stringify(dataDecodificato, null, 2) : "";
+		//let value = dataDecodificato ? JSON.stringify(dataDecodificato, null, 2) : "";
 
 		localStorage.removeItem('bankFiles');
-		localStorage.setItem('bankFiles', value);
+		//localStorage.setItem('bankFiles', value);
+		localStorage.setItem('bankFiles', dataDecodificato);
 
 		loadStoredFiles();
 		updateFilesList();
